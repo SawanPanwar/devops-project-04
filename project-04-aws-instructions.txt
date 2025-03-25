@@ -1,0 +1,77 @@
+# Tag the Docker images
+docker tag orsproject-04-webapp username/web:latest
+docker tag mysql:8.0 username/sql:8.0
+
+# Push the Docker images to Docker Hub
+docker push username/web:latest
+docker push username/sql:8.0
+
+# Connect to AWS EC2 Instance via SSH
+ssh -i "C:\Users\Lenovo\Downloads\ors.pem" ubuntu@13.126.52.191 
+
+# Install Docker on AWS EC2 Instance
+sudo kill -9 1962
+sudo killall apt apt-get
+sudo apt-get update
+sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+sudo apt-get update
+sudo apt-get install -y docker-ce
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker $USER
+
+# Verify Docker installation
+docker --version
+
+# Grant Permissions and Restart Docker
+sudo usermod -aG docker $USER
+groups $USER
+sudo systemctl restart docker
+ls -l /var/run/docker.sock
+sudo chmod 666 /var/run/docker.sock
+groups $USER
+sudo systemctl restart docker
+
+# Log in to Docker on the EC2 Instance
+docker login
+
+# Pull the Docker images from Docker Hub
+docker pull username/web:latest
+docker pull username/sql:8.0
+
+# Create a Network on AWS
+docker network create my-network
+
+# Run MySQL Container
+docker run -d --name mysql --network my-network -p 3307:3306 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=advance_java username/sql:8.0
+
+# Run Web Application Container
+docker run -d --name webapp --network my-network -p 8080:8080 username/web:latest
+
+# Access MySQL Container
+docker exec -it mysql mysql -u root -p
+
+# View Docker Containers
+docker ps
+
+# Stop and Remove Specific Docker Container
+docker stop webapp
+docker stop mysql
+docker rm webapp
+docker rm mysql
+
+# View Logs of Docker Container
+docker logs webapp
+docker logs mysql
+
+# Remove Docker Images
+docker rmi username/web:latest
+docker rmi username/sql:8.0
+
+
+http://13.126.52.191:8080/ORSProject-04/
